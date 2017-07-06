@@ -39,7 +39,8 @@ local function digging_allowed(player, v)
 	if not player then
 		return false
 	end
-	local tool = minetest.registered_tools[player:get_wielded_item():get_name()]
+	local tool = player:get_wielded_item():get_name()
+	tool = minetest.registered_tools[tool] or tool == "" and minetest.registered_items[tool]
 	if not tool
 	or not tool.tool_capabilities then
 		return false
@@ -1001,3 +1002,11 @@ minetest.register_tool("nether:sword_white", {
 		damage_groups = {fleshy=11},
 	},
 })
+
+
+-- override creative hand
+if minetest.settings:get_bool("creative_mode") then
+	local capas = minetest.registered_items[""].tool_capabilities
+	capas.groupcaps.nether = capas.groupcaps.cracky
+	minetest.override_item("", {tool_capabilities = capas})
+end
