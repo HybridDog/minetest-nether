@@ -691,10 +691,40 @@ function nether.grow_netherstructure(pos, generated)
 	set_vm_data(manip, nodes, pos, t1, "blood", generated)
 end
 
+local function set(tab, z,y,x, data)
+        if tab[z] then
+                if tab[z][y] then
+                        tab[z][y][x] = data   
+                        return
+                end
+                tab[z][y] = {[x] = data}
+                return
+        end
+        tab[z] = {[y] = {[x] = data}}
+end
 
-local set = vector.set_data_to_pos
-local get = vector.get_data_from_pos
-local remove = vector.remove_data_from_pos
+local function get(tab, z,y,x)
+        local data = tab[z]
+        if data then
+                data = data[y]
+                if data then
+                        return data[x]
+                end
+        end
+end
+
+local function remove(tab, z,y,x)
+        if get(tab, z,y,x) == nil then
+                return
+        end
+        tab[z][y][x] = nil
+        if not next(tab[z][y]) then
+                tab[z][y] = nil
+        end
+        if not next(tab[z]) then
+                tab[z] = nil
+        end
+end     
 
 local function soft_node(id)
 	return id == c.air or id == c.ignore
