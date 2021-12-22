@@ -197,7 +197,7 @@ minetest.register_on_craft(function(itemstack, player, old_craft_grid, craft_inv
 	if not sound_allowed then	-- avoid playing the sound multiple times, e.g. when middle mouse click
 		return
 	end
-	minetest.sound_play("default_wood_footstep", {pos=player:getpos(),  gain=0.25})
+	minetest.sound_play("default_wood_footstep", {pos=player:get_pos(),  gain=0.25})
 	sound_allowed = false
 	minetest.after(0, function()
 		sound_allowed = true

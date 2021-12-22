@@ -391,18 +391,18 @@ minetest.register_on_generated(function(minp, maxp, seed)
 				map_lengths_xyz),
 		}
 	end
-	pelin_maps.a:get2dMap_flat({x=minp.x, y=minp.z}, pmap1)
-	pelin_maps.b:get2dMap_flat({x=minp.x, y=minp.z}, pmap2)
-	pelin_maps.c:get2dMap_flat({x=minp.x, y=minp.z}, pmap3)
+	pelin_maps.a:get_2d_map_flat({x=minp.x, y=minp.z}, pmap1)
+	pelin_maps.b:get_2d_map_flat({x=minp.x, y=minp.z}, pmap2)
+	pelin_maps.c:get_2d_map_flat({x=minp.x, y=minp.z}, pmap3)
 
 	local forest_possible = maxp.y > f_h_min and minp.y < f_h_max
 
 	--local pmap_f_bottom = minetest.get_perlin_map(perlins.forest_bottom,
-	-- map_lengths_xyz):get2dMap_flat({x=minp.x, y=minp.z})
+	-- map_lengths_xyz):get_2d_map_flat({x=minp.x, y=minp.z})
 	local perlin_f_bottom, strassx, strassz
 	if forest_possible then
 		perlin_f_bottom = minetest.get_perlin(11, 3, 0.8, tmp2)
-		pelin_maps.forest_top:get2dMap_flat({x=minp.x, y=minp.z}, pmap_f_top)
+		pelin_maps.forest_top:get_2d_map_flat({x=minp.x, y=minp.z}, pmap_f_top)
 		strassx = get_ws_list(2, minp.x)
 		strassz = get_ws_list(2, minp.z)
 	end
@@ -485,7 +485,7 @@ minetest.register_on_generated(function(minp, maxp, seed)
 					local pstr = p.x.." "..p.z
 					if not f_perlins[pstr] then
 						f_perlins[pstr] = math.floor(f_h_min + (math.abs(
-							perlin_f_bottom:get2d{x=p.x, y=p.z} + 1))
+							perlin_f_bottom:get_2d{x=p.x, y=p.z} + 1))
 							* f_yscale_bottom + 0.5)
 					end
 					local top_noise = pmap_f_top[count]+1

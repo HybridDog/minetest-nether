@@ -362,6 +362,7 @@ minetest.register_node("nether:apple", {
 	tiles = {"nether_fruit_top.png", "nether_fruit_bottom.png",
 		"nether_fruit.png", "nether_fruit.png^[transformFX",
 		"nether_fruit.png^[transformFX", "nether_fruit.png"},
+	use_texture_alpha = "opaque",
 	node_box = {
 		type = "fixed",
 		fixed = {
@@ -641,7 +642,7 @@ minetest.register_node("nether:portal", {
 	light_source = 12,
 	paramtype = "light",
 	sunlight_propagates = true,
-	use_texture_alpha = true,
+	use_texture_alpha = "blend",
 	walkable = false,
 	pointable = false,
 	buildable_to = false,

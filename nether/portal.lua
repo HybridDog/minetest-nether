@@ -72,7 +72,7 @@ end
 
 -- where the player appears after dying
 local function get_player_died_target(player)
-	local target = vector.add(player:getpos(),
+	local target = vector.add(player:get_pos(),
 		{x=math.random(-100,100), y=0, z=math.random(-100,100)})
 	target.y = portal_target + math.random(4)
 	return target
@@ -172,7 +172,7 @@ minetest.register_chatcommand("from_hell", {
 			return false, "Something went wrong."
 		end
 		minetest.chat_send_player(pname, "You are free now")
-		local pos = player:getpos()
+		local pos = player:get_pos()
 		player_from_nether(player, {x=pos.x, y=100, z=pos.z})
 		return true, pname.." is now out of the nether."
 	end
@@ -246,7 +246,7 @@ if nether_prisons then
 	local metatable_overridden
 	minetest.register_on_joinplayer(function(player)
 		-- set the background when the player joins
-		if player:getpos().y < nether.start then
+		if player:get_pos().y < nether.start then
 			update_background(player, true)
 		end
 
@@ -270,7 +270,7 @@ else
 	-- test if player is in nether when he/she joins
 	minetest.register_on_joinplayer(function(player)
 		players_in_nether[player:get_player_name()] =
-			player:getpos().y < nether.start or nil
+			player:get_pos().y < nether.start or nil
 	end)
 end
 
@@ -310,7 +310,7 @@ local function obsi_teleport_player(player, pos, target)
 		return
 	end
 
-	local objpos = player:getpos()
+	local objpos = player:get_pos()
 	objpos.y = objpos.y+0.1 -- Fix some glitches at -8000
 	if minetest.get_node(vector.round(objpos)).name ~= "nether:portal" then
 		return
@@ -655,7 +655,7 @@ function nether.teleport_player(player)
 		minetest.log("error", "[nether] Missing player.")
 		return
 	end
-	local pos = vector.round(player:getpos())
+	local pos = vector.round(player:get_pos())
 	if not is_netherportal(pos) then
 		return
 	end

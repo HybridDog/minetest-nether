@@ -1,6 +1,6 @@
 
 local function throw_pearl(item, player)
-	local playerpos = player:getpos()
+	local playerpos = player:get_pos()
 	playerpos.y = playerpos.y+1.625
 	local obj = minetest.add_entity(playerpos, "nether:pearl_entity")
 	local dir = player:get_look_dir()
@@ -99,7 +99,7 @@ minetest.register_entity("nether:pearl_entity", {
 		self.player = tmp.player
 	end,
 	get_staticdata = function(self)
-		--forceload(vector.round(self.object:getpos()))
+		--forceload(vector.round(self.object:get_pos()))
 		return minetest.serialize({
 			player = self.player,
 		})
@@ -121,7 +121,7 @@ minetest.register_entity("nether:pearl_entity", {
 			return
 		end
 
-		local pos = self.object:getpos()
+		local pos = self.object:get_pos()
 		local rpos = vector.round(pos)
 		local lastpos = self.lastpos
 		if not lastpos then
