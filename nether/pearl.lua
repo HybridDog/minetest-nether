@@ -1,13 +1,4 @@
-local function table_contains(t, v)
-	for _,i in pairs(t) do
-		if v == i then
-			return true
-		end
-	end
-	return false
-end
 
-local creative = minetest.settings:get_bool("creative_mode")
 local function throw_pearl(item, player)
 	local playerpos = player:getpos()
 	playerpos.y = playerpos.y+1.625
@@ -15,8 +6,9 @@ local function throw_pearl(item, player)
 	local dir = player:get_look_dir()
 	obj:setvelocity(vector.multiply(dir, 30))
 	obj:setacceleration({x=dir.x*-3, y=-dir.y^8*80-10, z=dir.z*-3})
-	obj:get_luaentity().player = player:get_player_name()
-	if not creative then
+	local pname = player:get_player_name()
+	obj:get_luaentity().player = pname
+	if not minetest.is_creative_enabled(pname) then
 		item:take_item()
 		return item
 	end

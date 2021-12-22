@@ -62,7 +62,7 @@ nether.start = f_h_max+100
 local NETHER_HEIGHT = 30
 
 -- Maximum amount of randomness in the map generation
-NETHER_RANDOM = 2
+local NETHER_RANDOM = 2
 
 -- Frequency of Glowstone on the "roof" of the Nether (higher is less frequent)
 local GLOWSTONE_FREQ_ROOF = 500
@@ -117,7 +117,7 @@ end
 
 
 local path = minetest.get_modpath"nether"
-dofile(path.."/weird_mapgen_noise.lua")
+local nether_weird_noise = dofile(path.."/weird_mapgen_noise.lua")
 dofile(path.."/items.lua")
 --dofile(path.."/furnace.lua")
 dofile(path.."/pearl.lua")

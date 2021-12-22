@@ -5,7 +5,7 @@ end
 
 local r_chs = {}
 
-function nether_weird_noise(minp, fct, s, seed, range, scale)
+local function nether_weird_noise(minp, fct, s, seed, range, scale)
 	if not r_chs[s] then
 		r_chs[s] = math.floor(s/3+0.5)
 	end
@@ -86,3 +86,5 @@ minetest.register_node("ac:wmg", {
 		end
 	end,
 })]]
+
+return nether_weird_noise

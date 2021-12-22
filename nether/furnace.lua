@@ -257,7 +257,7 @@ minetest.register_abm({
 		meta:set_float("timedif", timediff-times)
 
 
-		for i = 1,times do
+		for _ = 1,times do
 			for _,name in pairs({
 					"fuel_totaltime",
 					"fuel_time",
@@ -292,7 +292,7 @@ minetest.register_abm({
 						inv:add_item("dst", cooked.item)
 						-- take stuff from "src" list
 						inv:set_stack("src", 1, aftercooked.items[1])
-					else
+					--~ else
 						--print("Could not insert '"..cooked.item:to_string().."'")
 					end
 					meta:set_string("src_time", 0)

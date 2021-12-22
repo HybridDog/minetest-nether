@@ -41,11 +41,13 @@ local function digging_allowed(player, v)
 	if not player then
 		return false
 	end
-	if creative_installed and creative.is_enabled_for(player:get_player_name()) then
+	if creative_installed
+	and creative.is_enabled_for(player:get_player_name()) then
 		return true
 	end
 	local tool = player:get_wielded_item():get_name()
-	tool = minetest.registered_tools[tool] or tool == "" and minetest.registered_items[tool]
+	tool = minetest.registered_tools[tool] or tool == ""
+		and minetest.registered_items[tool]
 	if not tool
 	or not tool.tool_capabilities then
 		return false
@@ -210,7 +212,8 @@ add_more_nodes("blood_empty")
 
 minetest.register_node("nether:blood_top", {
 	description = "Nether Blood Head",
-	tiles = {"nether_blood_top.png", "nether_blood.png", "nether_blood.png^nether_blood_side.png"},
+	tiles = {"nether_blood_top.png", "nether_blood.png",
+		"nether_blood.png^nether_blood_side.png"},
 	groups = {snappy=2, choppy=2, oddly_breakable_by_hand=1},
 	sounds = default.node_sound_wood_defaults(),
 })
@@ -218,7 +221,8 @@ add_more_nodes("blood_top")
 
 minetest.register_node("nether:blood_top_cooked", {
 	description = "Cooked Nether Blood Head",
-	tiles = {"nether_blood_top_cooked.png", "nether_blood_cooked.png", "nether_blood_cooked.png^nether_blood_side_cooked.png"},
+	tiles = {"nether_blood_top_cooked.png", "nether_blood_cooked.png",
+		"nether_blood_cooked.png^nether_blood_side_cooked.png"},
 	groups = {nether=3},
 	sounds = nether_sound,
 	furnace_burntime = 10,
@@ -230,7 +234,8 @@ add_more_nodes("blood_top_cooked")
 
 minetest.register_node("nether:blood_top_empty", {
 	description = "Nether Blood Head Extracted",
-	tiles = {"nether_blood_top_empty.png", "nether_blood_empty.png", "nether_blood_empty.png^nether_blood_side_empty.png"},
+	tiles = {"nether_blood_top_empty.png", "nether_blood_empty.png",
+		"nether_blood_empty.png^nether_blood_side_empty.png"},
 	groups = {snappy=2, choppy=2, oddly_breakable_by_hand=1},
 	sounds = default.node_sound_wood_defaults(),
 })
@@ -239,7 +244,8 @@ add_more_nodes("blood_top_empty")
 
 minetest.register_node("nether:blood_stem", {
 	description = "Nether Blood Stem",
-	tiles = {"nether_blood_stem_top.png", "nether_blood_stem_top.png", "nether_blood_stem.png"},
+	tiles = {"nether_blood_stem_top.png", "nether_blood_stem_top.png",
+		"nether_blood_stem.png"},
 	groups = {snappy=2, choppy=2, oddly_breakable_by_hand=1},
 	sounds = default.node_sound_wood_defaults(),
 })
@@ -247,7 +253,8 @@ add_more_nodes("blood_stem")
 
 minetest.register_node("nether:blood_stem_cooked", {
 	description = "Cooked Nether Blood Stem",
-	tiles = {"nether_blood_stem_top_cooked.png", "nether_blood_stem_top_cooked.png", "nether_blood_stem_cooked.png"},
+	tiles = {"nether_blood_stem_top_cooked.png",
+		"nether_blood_stem_top_cooked.png", "nether_blood_stem_cooked.png"},
 	groups = {nether=3},
 	sounds = nether_sound,
 	furnace_burntime = 30,
@@ -259,7 +266,8 @@ add_more_nodes("blood_stem_cooked")
 
 minetest.register_node("nether:blood_stem_empty", {
 	description = "Nether Blood Stem Extracted",
-	tiles = {"nether_blood_stem_top_empty.png", "nether_blood_stem_top_empty.png", "nether_blood_stem_empty.png"},
+	tiles = {"nether_blood_stem_top_empty.png",
+		"nether_blood_stem_top_empty.png", "nether_blood_stem_empty.png"},
 	groups = {tree=1, choppy=2, oddly_breakable_by_hand=1},
 	sounds = default.node_sound_wood_defaults(),
 })
@@ -351,7 +359,9 @@ minetest.override_item("riesenpilz:nether_shroom", {
 minetest.register_node("nether:apple", {
 	description = "Nether Fruit",
 	drawtype = "nodebox",
-	tiles = {"nether_fruit_top.png", "nether_fruit_bottom.png", "nether_fruit.png", "nether_fruit.png^[transformFX", "nether_fruit.png^[transformFX", "nether_fruit.png"},
+	tiles = {"nether_fruit_top.png", "nether_fruit_bottom.png",
+		"nether_fruit.png", "nether_fruit.png^[transformFX",
+		"nether_fruit.png^[transformFX", "nether_fruit.png"},
 	node_box = {
 		type = "fixed",
 		fixed = {
@@ -379,7 +389,7 @@ minetest.register_node("nether:apple", {
 			return
 		end
 		itemstack:take_item()
-		if nether_port(user, vector.round(user:getpos())) then
+		if nether.teleport_player(user) then
 			return itemstack
 		end
 		local amount = math.random(4, 6)
@@ -506,8 +516,10 @@ minetest.register_node("nether:tree", {
 
 minetest.register_node("nether:tree_corner", {
 	description = "Nether Trunk Corner",
-	tiles = {"nether_tree.png^[transformR180", "nether_tree_top.png", "nether_tree_corner.png^[transformFY",
-		"nether_tree_corner.png^[transformR180", "nether_tree.png", "nether_tree_top.png"},
+	tiles = {"nether_tree.png^[transformR180", "nether_tree_top.png",
+		"nether_tree_corner.png^[transformFY",
+		"nether_tree_corner.png^[transformR180", "nether_tree.png",
+		"nether_tree_top.png"},
 	paramtype2 = "facedir",
 	is_ground_content = false,
 	groups = {tree=1,choppy=2,oddly_breakable_by_hand=1,not_in_creative_inventory=1},

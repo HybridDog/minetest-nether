@@ -484,7 +484,7 @@ local function make_portal(pos)
 
 	for d=0,3 do
 	for y=p1.y,p2.y do
-		local p = {}
+		local p
 		if param2 == 0 then
 			p = {x=p1.x+d, y=y, z=p1.z}
 		else
@@ -580,8 +580,7 @@ end)
 
 
 -- a not filled square
-vector.square = vector.square or
-function(r)
+local function vector_square(r)
 	local tab, n = {}, 1
 	for i = -r+1, r do
 		for j = -1, 1, 2 do
@@ -601,13 +600,13 @@ local function is_netherportal(pos)
 			return
 		end
 	end
-	for _,sn in pairs(vector.square(1)) do
+	for _,sn in pairs(vector_square(1)) do
 		if minetest.get_node({x=x+sn[1], y=y-1, z=z+sn[2]}).name ~= "nether:netherrack"
 		or minetest.get_node({x=x+sn[1], y=y+3, z=z+sn[2]}).name ~= "nether:blood_cooked" then
 			return
 		end
 	end
-	for _,sn in pairs(vector.square(2)) do
+	for _,sn in pairs(vector_square(2)) do
 		if minetest.get_node({x=x+sn[1], y=y-1, z=z+sn[2]}).name ~= "nether:netherrack_black"
 		or minetest.get_node({x=x+sn[1], y=y+3, z=z+sn[2]}).name ~= "nether:wood_empty" then
 			return
@@ -651,13 +650,12 @@ local function set_portal(t, z,x, y)
 end
 
 -- used when a player eats that fruit in a portal
-function nether_port(player, pos)
-	if not player
-	or not pos
-	or not pos.x then
-		minetest.log("error", "[nether] nether_port: something failed.")
+function nether.teleport_player(player)
+	if not player then
+		minetest.log("error", "[nether] Missing player.")
 		return
 	end
+	local pos = vector.round(player:getpos())
 	if not is_netherportal(pos) then
 		return
 	end

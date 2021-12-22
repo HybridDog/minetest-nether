@@ -68,10 +68,13 @@ local guide_infos = {
 		{"text", "One contains 4 kinds of blocks :"},
 		{"image", {1, 1, cube("nether_blood.png"), 1}},
 		{"image", {1, 1,
-			cube("nether_blood_top.png", "nether_blood.png^nether_blood_side.png", "nether_blood.png^nether_blood_side.png"),
+			cube("nether_blood_top.png",
+				"nether_blood.png^nether_blood_side.png",
+				"nether_blood.png^nether_blood_side.png"),
 			2}},
 		{"image", {1, 1, "nether_fruit.png", 3}},
-		{"image", {1, 1, cube("nether_blood_stem_top.png", "nether_blood_stem.png", "nether_blood_stem.png")}},
+		{"image", {1, 1, cube("nether_blood_stem_top.png",
+			"nether_blood_stem.png", "nether_blood_stem.png")}},
 		{"y", 0.1},
 		{"text", "Blood stem, blood, blood head and nether fruit"},
 		{"y", 0.1},
@@ -123,10 +126,14 @@ local guide_infos = {
 			"After that it's recommended to use cooked blood nodes."},
 		{"y", 0.1},
 		{"text", "Some nether items can be cooked:"},
-		{"image", {1, 1, cube("nether_blood_stem_top_cooked.png", "nether_blood_stem_cooked.png", "nether_blood_stem_cooked.png"), 0.35}},
+		{"image", {1, 1, cube("nether_blood_stem_top_cooked.png",
+			"nether_blood_stem_cooked.png", "nether_blood_stem_cooked.png"),
+			0.35}},
 		{"image", {1, 1, cube("nether_blood_cooked.png"), 1.6}},
 		{"image", {1, 1,
-			cube("nether_blood_top_cooked.png", "nether_blood_cooked.png^nether_blood_side_cooked.png", "nether_blood_cooked.png^nether_blood_side_cooked.png"),
+			cube("nether_blood_top_cooked.png",
+				"nether_blood_cooked.png^nether_blood_side_cooked.png",
+				"nether_blood_cooked.png^nether_blood_side_cooked.png"),
 			2.9}},
 		{"image", {1, 1, cube("nether_wood_cooked.png"), 4.3}},
 		{"y", 1.2},
@@ -142,14 +149,18 @@ local guide_infos = {
 		{"text", "Here you can find out information about the nether extractor."},
 		{"y", 0.2},
 		{"text", "Here you can see its craft recipe:"},
-		{"image", {0.5, 0.5, cube("nether_blood_top_cooked.png", "nether_blood_cooked.png^nether_blood_side_cooked.png", "nether_blood_cooked.png^nether_blood_side_cooked.png"), 0.5}},
+		{"image", {0.5, 0.5, cube("nether_blood_top_cooked.png",
+			"nether_blood_cooked.png^nether_blood_side_cooked.png",
+			"nether_blood_cooked.png^nether_blood_side_cooked.png"), 0.5}},
 		{"image", {0.5, 0.5, cube("nether_netherrack_brick.png"), 1}},
 		{"image", {0.5, 0.5, cube("nether_netherrack_brick.png")}},
 		{"image", {0.5, 0.5, cube("nether_blood_extractor.png"), 2.5}},
 		{"image", {0.5, 0.5, "nether_shroom_stem.png", 0.5}},
 		{"image", {0.5, 0.5, cube("nether_blood_cooked.png"), 1}},
 		{"image", {0.5, 0.5, cube("nether_blood_cooked.png")}},
-		{"image", {0.5, 0.5, cube("nether_blood_stem_top_cooked.png", "nether_blood_stem_cooked.png", "nether_blood_stem_cooked.png"), 0.5}},
+		{"image", {0.5, 0.5, cube("nether_blood_stem_top_cooked.png",
+			"nether_blood_stem_cooked.png", "nether_blood_stem_cooked.png"),
+			0.5}},
 		{"image", {0.5, 0.5, cube("nether_netherrack_brick.png"), 1}},
 		{"image", {0.5, 0.5, cube("nether_netherrack_brick.png")}},
 		{"y", 0.2},
@@ -347,11 +358,12 @@ for n,i in ipairs(guide_forms) do
 end
 
 -- creates contents formspec
-local y = 0
 for y,i in ipairs(guide_forms) do
-	local desc, form = unpack(i)
-	local s = #desc*1.3/font_size+1.5
-	guide_forms.contents = guide_forms.contents.."button["..guide_size.cx*12/s-0.5 ..","..guide_size.cy+y/1.3 ..";"..s..",1;name;"..desc.."]"
+	local desc = i[1]
+	local s = #desc * 1.3 / font_size + 1.5
+	guide_forms.contents = guide_forms.contents ..
+		"button[" .. guide_size.cx * 12 / s - 0.5 .. "," ..
+		guide_size.cy + y / 1.3 .. ";" .. s .. ",1;name;" .. desc .. "]"
 end
 
 -- shows the contents of the formspec
@@ -387,7 +399,9 @@ minetest.register_chatcommand("nether_help", {
 			return false
 		end
 		if player:getpos().y > nether.start then
-			minetest.chat_send_player(name, "Usually you don't neet this guide here. You can view it in the nether.")
+			minetest.chat_send_player(name,
+				"Usually you don't neet this guide here. " ..
+				"You can view it in the nether.")
 			return false
 		end
 		minetest.chat_send_player(name, "Showing guide...")
