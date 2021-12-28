@@ -17,3 +17,7 @@ nether.log_to_chat (Log messages to chat) bool false
 #    2: Acceptable amount of information
 #    3: Lots of text
 nether.log_level (Log level) int 2 0 3
+
+#    If disabled, players cannot view the nether guide with /nether_help
+#    in the overworld.
+nether.overworld_help (Overworld help) bool true

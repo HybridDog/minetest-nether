@@ -13,3 +13,5 @@ ignore = {
 	"411", "421", "422", "423", "431", "432",
 		-- Shadowing
 }
+-- Allow very long lines in guide.lua for the HTML code
+files["guide.lua"] = {ignore = {"631"}}

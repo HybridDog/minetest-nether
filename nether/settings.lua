@@ -2,6 +2,7 @@ local default_settings = {
 	trap_players = true,
 	log_to_chat = false,
 	log_level = 2,
+	overworld_help = true,
 }
 
 nether.settings = {}
