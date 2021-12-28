@@ -316,6 +316,58 @@ local guide_forms = {
 
 -- change the infos to formspecs
 for n,data in ipairs(guide_infos) do
+	local html_text = ""
+	local form = ""
+	local y = 0
+	local x = guide_size.cx
+	for _,i in ipairs(data) do
+		local typ, content = unpack(i)
+		if typ == "y" then
+			y = y+content
+		elseif typ == "x" then
+			x = math.max(x, content)
+		elseif typ == "text" then
+			html_text = html_text .. content .. "\n"
+			local tab = minetest.wrap_text(content, guide_size.fx, true)
+			local l = guide_size.cx
+			for _,str in ipairs(tab) do
+				--~ form = form.."label["..guide_size.cx ..","..guide_size.cy+y..";"..str.."]"
+				y = y+guide_size.fy
+				l = math.max(l, #str)
+			end
+			x = math.max(x, l/font_size)
+		elseif typ == "image" then
+			local w, h, texture_name, px, py = unpack(content)
+			if not px then
+				--~ form = form.."image["..guide_size.cx..","..guide_size.cy+y+h*0.3 ..";"..w..","..h..";"..texture_name.."]"
+				html_text = html_text ..
+					("<img name=%s width=%g height=%g>\n"):format(
+					texture_name, w, h)
+				y = y+h
+			else
+				px = guide_size.cx+px
+				py = py or 0
+				html_text = html_text ..
+					("<img name=%s width=%g height=%g>\n"):format(
+					texture_name, w, h)
+				--~ form = form.."image["..px..","..
+					--~ guide_size.cy+y+h*0.3+py ..";"..w..","..h..";"..texture_name.."]"
+				x = math.max(x, px+w)
+			end
+		end
+	end
+	form = ("formspec_version[4]size[%g,%g;]hypertext[0,0;%g,%g;html;%s]button[%g,%g;1,2;quit;Back]"
+		):format(
+		x * 1.8, y + 1,
+		x * 1.8, y,
+		minetest.formspec_escape(html_text),
+		0.5 * x - 0.5, y)
+
+	guide_forms[n] = {data.description, form}
+end
+print(dump(guide_forms))
+--[[
+for n,data in ipairs(guide_infos) do
 	local form = ""
 	local y = 0
 	local x = guide_size.cx
@@ -351,6 +403,7 @@ for n,data in ipairs(guide_infos) do
 	form = "size["..x*1.8 ..","..y+1 ..";]"..form.."button["..x/2-0.5 ..","..y ..";1,2;quit;Back]"
 	guide_forms[n] = {data.description, form}
 end
+--]]
 
 local desc_tab = {}
 for n,i in ipairs(guide_forms) do
