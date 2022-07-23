@@ -649,13 +649,19 @@ local function set_portal(t, z,x, y)
 	t[z][x] = y
 end
 
+local function get_player_nodepos(player)
+	local pos = player:get_pos()
+	pos.y = pos.y + player:get_properties().collisionbox[2] + 0.5
+	return vector.round(pos)
+end
+
 -- used when a player eats that fruit in a portal
 function nether.teleport_player(player)
 	if not player then
 		minetest.log("error", "[nether] Missing player.")
 		return
 	end
-	local pos = vector.round(player:get_pos())
+	local pos = get_player_nodepos(player)
 	if not is_netherportal(pos) then
 		return
 	end
