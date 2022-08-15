@@ -13,20 +13,20 @@ end)
 
 local save_path = minetest.get_worldpath() .. "/nether_players"
 local players_in_nether = {}
--- only get info from file if nether prisons
-if nether_prisons then
+
+-- Load the list of players which are trapped in the nether
+-- (or would be trapped if nether_prisons was true)
+do
 	local file = io.open(save_path, "r")
-	if not file then
-		return
-	end
-	local contents = file:read"*all"
-	io.close(file)
-	if not contents then
-		return
-	end
-	local playernames = string.split(contents, " ")
-	for i = 1,#playernames do
-		players_in_nether[playernames[i]] = true
+	if file then
+		local contents = file:read"*all"
+		io.close(file)
+		if contents then
+			local playernames = string.split(contents, " ")
+			for i = 1,#playernames do
+				players_in_nether[playernames[i]] = true
+			end
+		end
 	end
 end
 
@@ -179,6 +179,7 @@ minetest.register_chatcommand("from_hell", {
 })
 
 
+-- Disallow teleportation and change spawn positions if the nether traps players
 if nether_prisons then
 	-- randomly set player position when he/she dies in nether
 	minetest.register_on_respawnplayer(function(player)
@@ -265,12 +266,6 @@ if nether_prisons then
 				end
 			end
 		end
-	end)
-else
-	-- test if player is in nether when he/she joins
-	minetest.register_on_joinplayer(function(player)
-		players_in_nether[player:get_player_name()] =
-			player:get_pos().y < nether.start or nil
 	end)
 end
 
