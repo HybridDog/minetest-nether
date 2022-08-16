@@ -1,0 +1,19 @@
+#    If enabled, regular players which are in the nether can leave it only with
+#    a nether portal and other ways of teleportation, e.g. the /spawn
+#    chatcommand, are blocked. Similarly, the nether can only be entered with a
+#    portal.
+#    This forces the players to investigate the nether and build a portal with
+#    hellish effort to go back to their home in the overworld.
+#    It is recommended to disable this setting in creative mode or if damage is
+#    disabled.
+nether.trap_players (Trap players) bool true
+
+#    If enabled, show log messages in the chat and not only in debug.txt
+nether.log_to_chat (Log messages to chat) bool false
+
+#    Specify how much text is printed for debugging purposes
+#    0: Disabled
+#    1: A bit of information
+#    2: Acceptable amount of information
+#    3: Lots of text
+nether.log_level (Log level) int 2 0 3

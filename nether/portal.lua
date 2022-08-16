@@ -2,8 +2,7 @@
 
 -- kills the player if he uses PilzAdam portal
 local portal_target = nether.buildings+1
-local nether_prisons = minetest.settings:get_bool("enable_damage")
-local obsidian_portal_kills = nether_prisons and true
+local damage_enabled = minetest.settings:get_bool"enable_damage"
 local mclike_portal = false
 
 local abm_allowed
@@ -15,7 +14,7 @@ local save_path = minetest.get_worldpath() .. "/nether_players"
 local players_in_nether = {}
 
 -- Load the list of players which are trapped in the nether
--- (or would be trapped if nether_prisons was true)
+-- (or would be trapped if nether.trap_players was true)
 do
 	local file = io.open(save_path, "r")
 	if file then
@@ -43,7 +42,7 @@ local function save_nether_players()
 end
 
 local update_background
-if nether_prisons then
+if nether.trap_players then
 	function update_background(player, down)
 		if down then
 			player:set_sky({r=15, g=0, b=0}, "plain")
@@ -95,9 +94,6 @@ end
 -- teleports players to nether or helps it
 local function player_to_nether(player, pos)
 	local pname = player:get_player_name()
-	if players_in_nether[pname] then
-		return
-	end
 	players_in_nether[pname] = true
 	save_nether_players()
 	update_background(player, true)
@@ -107,8 +103,10 @@ local function player_to_nether(player, pos)
 	end
 	minetest.chat_send_player(pname, "For any reason you arrived here. " ..
 		"Type /nether_help to find out things like craft recipes.")
-	player:set_hp(0)
-	if not nether_prisons then
+	if nether.trap_players then
+		player:set_hp(0)
+	end
+	if not damage_enabled or not nether.trap_players then
 		player:set_pos(get_player_died_target(player))
 	end
 end
@@ -119,7 +117,7 @@ local function player_from_nether(player, pos)
 		players_in_nether[pname] = nil
 		save_nether_players()
 	end
-	update_background(player)
+	update_background(player, false)
 	player:set_pos(pos)
 end
 
@@ -180,7 +178,7 @@ minetest.register_chatcommand("from_hell", {
 
 
 -- Disallow teleportation and change spawn positions if the nether traps players
-if nether_prisons then
+if nether.trap_players then
 	-- randomly set player position when he/she dies in nether
 	minetest.register_on_respawnplayer(function(player)
 		local pname = player:get_player_name()
@@ -230,7 +228,7 @@ if nether_prisons then
 			else
 				minetest.log("action", "Player \"" .. pname ..
 					"\" must not be in the nether, teleporting it!")
-				update_background(player)
+				update_background(player, false)
 				current_pos.y = 20
 				player:set_pos(current_pos)
 			end
@@ -312,7 +310,7 @@ local function obsi_teleport_player(player, pos, target)
 	end
 
 	local has_teleported
-	if obsidian_portal_kills then
+	if damage_enabled then
 		obsidian_teleport(player, pname)
 		has_teleported = true
 	elseif not mclike_portal then

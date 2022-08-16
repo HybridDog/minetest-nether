@@ -19,15 +19,6 @@ end
 
 --== EDITABLE OPTIONS ==--
 
---says some information.
-nether.info = true
-
--- tell everyone about the generation
-nether.inform_all = minetest.is_singleplayer()
-
---1:<a bit of information> 2:<acceptable amount of information> 3:<lots of text>
-nether.max_spam = 2
-
 -- Depth of the nether
 local nether_middle = -20000
 
@@ -94,9 +85,17 @@ local NETHER_SHROOM_FREQ = 100
 
 --== END OF EDITABLE OPTIONS ==--
 
-if nether.info then
+local path = minetest.get_modpath"nether"
+dofile(path .. "/settings.lua")
+local nether_weird_noise = dofile(path .. "/weird_mapgen_noise.lua")
+dofile(path .. "/items.lua")
+--dofile(path .. "/furnace.lua")
+dofile(path .. "/pearl.lua")
+
+
+if nether.log_level >= 1 then
 	function nether:inform(msg, spam, t)
-		if spam <= self.max_spam then
+		if spam <= self.log_level then
 			local info
 			if t then
 				info = "[nether] " .. msg .. (" after ca. %.3g s"):format(
@@ -105,7 +104,7 @@ if nether.info then
 				info = "[nether] " .. msg
 			end
 			print(info)
-			if self.inform_all then
+			if self.log_to_chat then
 				minetest.chat_send_all(info)
 			end
 		end
@@ -115,12 +114,6 @@ else
 	end
 end
 
-
-local path = minetest.get_modpath"nether"
-local nether_weird_noise = dofile(path.."/weird_mapgen_noise.lua")
-dofile(path.."/items.lua")
---dofile(path.."/furnace.lua")
-dofile(path.."/pearl.lua")
 
 -- Weierstrass function stuff from https://github.com/slemonide/gen
 local SIZE = 1000
