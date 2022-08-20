@@ -4,7 +4,7 @@ read_globals = {
 	"string",
 
 	-- Mods
-	"default", "stairs", "creative"
+	"default", "stairs"
 }
 globals = {"nether"}
 ignore = {

@@ -191,7 +191,7 @@ if nether.trap_players then
 			-- fixes respawn bug
 			local player = minetest.get_player_by_name(pname)
 			if player then
-				player:moveto(target)
+				player:move_to(target)
 			end
 		end, pname, target)
 		return true
@@ -558,10 +558,11 @@ minetest.after(0.1, function()
 			and minetest.get_node(pt.under).name == "default:obsidian" then
 				local done = make_portal(pt.under)
 				if done then
-					minetest.chat_send_player(player:get_player_name(),
+					local pname = player:get_player_name()
+					minetest.chat_send_player(pname,
 						"Warning: If you are in the nether you may not be " ..
 						"able to find the way out!")
-					if not minetest.settings:get_bool("creative_mode") then
+					if not minetest.is_creative_enabled(pname) then
 						stack:take_item()
 					end
 				end

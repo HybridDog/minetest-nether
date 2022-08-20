@@ -4,20 +4,27 @@ local nether_sound = default.node_sound_stone_defaults({
 	footstep = {name="nether_footstep", gain=0.4}
 })
 
+-- The fence registration function from fence_registration
 local add_fence = minetest.register_fence
+local stairs_exist = minetest.global_exists("stairs")
+
+-- A function which registers a fence and stairs nodes for a nether node if the
+-- mods for these node registrations are available
 local function add_more_nodes(name)
 	local nd = "nether:"..name
 	if not string.find(name, "nether") then
 		name = "nether_"..name
 	end
 	local data = minetest.registered_nodes[nd]
-	stairs.register_stair_and_slab(name, nd,
-		data.groups,
-		data.tiles,
-		data.description.." Stair",
-		data.description.." Slab",
-		data.sounds
-	)
+	if stairs_exist then
+		stairs.register_stair_and_slab(name, nd,
+			data.groups,
+			data.tiles,
+			data.description.." Stair",
+			data.description.." Slab",
+			data.sounds
+		)
+	end
 	if add_fence then
 		add_fence({fence_of = nd})
 	end
@@ -35,14 +42,11 @@ local function add_fence(name)
 end
 --]]
 
-local creative_installed = minetest.global_exists("creative")
-
 local function digging_allowed(player, v)
 	if not player then
 		return false
 	end
-	if creative_installed
-	and creative.is_enabled_for(player:get_player_name()) then
+	if minetest.is_creative_enabled(player:get_player_name()) then
 		return true
 	end
 	local tool = player:get_wielded_item():get_name()

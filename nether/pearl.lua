@@ -4,8 +4,8 @@ local function throw_pearl(item, player)
 	playerpos.y = playerpos.y+1.625
 	local obj = minetest.add_entity(playerpos, "nether:pearl_entity")
 	local dir = player:get_look_dir()
-	obj:setvelocity(vector.multiply(dir, 30))
-	obj:setacceleration({x=dir.x*-3, y=-dir.y^8*80-10, z=dir.z*-3})
+	obj:set_velocity(vector.multiply(dir, 30))
+	obj:set_acceleration({x=dir.x*-3, y=-dir.y^8*80-10, z=dir.z*-3})
 	local pname = player:get_player_name()
 	obj:get_luaentity().player = pname
 	if not minetest.is_creative_enabled(pname) then
@@ -56,7 +56,7 @@ local function teleport_player(pos, player)
 		return false
 	end
 	pos.y = pos.y+0.05
-	player:moveto(pos)
+	player:move_to(pos)
 	return true
 end
 
