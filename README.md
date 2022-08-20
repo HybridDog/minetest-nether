@@ -3,5 +3,9 @@ https://forum.minetest.net/viewtopic.php?f=9&t=10265
 
 
 TODO:
-* Find a way to get the perlin noise inside [-1; 1] or use another noise
-* Add some node which containing items to the simple pyramid "buildings"
+* Mapgen: Find a way to get the perlin noise values inside [-1; 1] or use
+  another noise.
+  The problem is visible in the nether forest, where the mapgen code flattens
+  the ceiling if it is very high.
+* Mapgen: Generate more detail inside the simple pyramid-like "buildings",
+  e.g. add a small treasure chest node which contains items
