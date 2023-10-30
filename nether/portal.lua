@@ -573,13 +573,13 @@ minetest.after(0.1, function()
 end)
 
 
--- a not filled square
+-- Get positions for an empty square around the origin
 local function vector_square(r)
 	local tab, n = {}, 1
 	for i = -r+1, r do
 		for j = -1, 1, 2 do
 			local a, b = r*j, i*j
-			tab[n] = {a, b}
+			tab[n] = {a, -b}
 			tab[n+1] = {b, a}
 			n=n+2
 		end
