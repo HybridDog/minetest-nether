@@ -41,6 +41,7 @@ NETHER['is_player_in_nether'] = function (player)
 		return true
 	end
 end
+local is_player_in_nether = NETHER['is_player_in_nether']
 
 local function save_nether_players()
 	local playernames,n = {},1
@@ -92,11 +93,13 @@ end
 
 -- used for obsidian portal
 local function obsidian_teleport(player, pname, target)
-	minetest.chat_send_player(pname, "For any reason you arrived here. Type " ..
-		"/nether_help to find out things like craft recipes.")
-	players_in_nether[pname] = true
-	save_nether_players()
-	update_background(player, true)
+	if nether.trap_players then
+		minetest.chat_send_player(pname, "For any reason you arrived here. Type " ..
+			"/nether_help to find out things like craft recipes.")
+		players_in_nether[pname] = true
+		save_nether_players()
+		update_background(player, true)
+	end
 	if target then
 		player:set_pos(target)
 	else
@@ -186,6 +189,34 @@ minetest.register_chatcommand("from_hell", {
 		local pos = player:get_pos()
 		player_from_nether(player, {x=pos.x, y=100, z=pos.z})
 		return true, pname.." is now out of the nether."
+	end
+})
+
+-- Useful for debugging Nether player state tracking. Written by Deathwing777
+minetest.register_chatcommand("in_hell", {
+	params = "[<player_name>]",
+	description = "Is the player in hell?",
+	func = function(name, pname)
+		if not minetest.check_player_privs(name, {nether=true}) then
+			return false,
+				"You need the nether priv to execute this chatcommand."
+		end
+		if not player_exists(pname) then
+			pname = name
+		end
+		local player = minetest.get_player_by_name(pname)
+		if not player then
+			return false, "Something went wrong."
+		end
+		
+		status = pname.." is in the "
+		if is_player_in_nether(player) then
+			status = status.."NETHER!"
+		else
+			status = status.."OVERWORLD!"
+		end
+		
+		return true, status
 	end
 })
 
