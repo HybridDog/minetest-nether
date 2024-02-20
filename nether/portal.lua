@@ -13,6 +13,9 @@ end)
 local save_path = minetest.get_worldpath() .. "/nether_players"
 local players_in_nether = {}
 
+-- Global table to store things that nether aware mods might need to access.
+NETHER = {}
+
 -- Load the list of players which are trapped in the nether
 -- (or would be trapped if nether.trap_players was true)
 do
@@ -26,6 +29,16 @@ do
 				players_in_nether[playernames[i]] = true
 			end
 		end
+	end
+end
+
+-- Nether aware mods will need to know if a player is in the nether.
+NETHER['is_player_in_nether'] = function (player)
+	local pname = player:get_player_name()
+	if players_in_nether[pname] == nil then
+		return false
+	else
+		return true
 	end
 end
 
