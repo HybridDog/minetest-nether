@@ -13,9 +13,6 @@ end)
 local save_path = minetest.get_worldpath() .. "/nether_players"
 local players_in_nether = {}
 
--- Global table to store things that nether aware mods might need to access.
-NETHER = {}
-
 -- Load the list of players which are trapped in the nether
 -- (or would be trapped if nether.trap_players was true)
 do
@@ -33,7 +30,7 @@ do
 end
 
 -- Nether aware mods will need to know if a player is in the nether.
-NETHER['is_player_in_nether'] = function (player)
+nether['is_player_in_nether'] = function (player)
 	local pname = player:get_player_name()
 	if players_in_nether[pname] == nil then
 		return false
@@ -41,7 +38,17 @@ NETHER['is_player_in_nether'] = function (player)
 		return true
 	end
 end
-local is_player_in_nether = NETHER['is_player_in_nether']
+
+-- Nether aware mods may have other means of moving players between the Nether and Overworld, and if so, they should tell us about it so we can keep track of the player state.
+nether['external_nether_teleport'] = function (player)
+	local pos = player:get_pos()
+	local pname = player:get_player_name()
+	if (pos.y < nether.start) and (pos.y >= nether.bottom) then
+		players_in_nether[pname] = true
+	else
+		players_in_nether[pname] = nil
+	end
+end
 
 local function save_nether_players()
 	local playernames,n = {},1
@@ -210,7 +217,35 @@ minetest.register_chatcommand("in_hell", {
 		end
 		
 		status = pname.." is in the "
-		if is_player_in_nether(player) then
+		if nether.is_player_in_nether(player) then
+			status = status.."NETHER!"
+		else
+			status = status.."OVERWORLD!"
+		end
+		
+		return true, status
+	end
+})
+
+minetest.register_chatcommand("update_hells_registry", {
+	params = "[<player_name>]",
+	description = "Update player state if they got to or from the nether in another way.",
+	func = function(name, pname)
+		if not minetest.check_player_privs(name, {nether=true}) then
+			return false,
+				"You need the nether priv to execute this chatcommand."
+		end
+		if not player_exists(pname) then
+			pname = name
+		end
+		local player = minetest.get_player_by_name(pname)
+		if not player then
+			return false, "Something went wrong."
+		end
+		
+		nether.external_nether_teleport(player)
+		status = pname.." is in the "
+		if nether.is_player_in_nether(player) then
 			status = status.."NETHER!"
 		else
 			status = status.."OVERWORLD!"
