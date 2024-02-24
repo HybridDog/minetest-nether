@@ -29,27 +29,6 @@ do
 	end
 end
 
--- Nether aware mods will need to know if a player is in the nether.
-nether['is_player_in_nether'] = function (player)
-	local pname = player:get_player_name()
-	if players_in_nether[pname] == nil then
-		return false
-	else
-		return true
-	end
-end
-
--- Nether aware mods may have other means of moving players between the Nether and Overworld, and if so, they should tell us about it so we can keep track of the player state.
-nether['external_nether_teleport'] = function (player)
-	local pos = player:get_pos()
-	local pname = player:get_player_name()
-	if (pos.y < nether.start) and (pos.y >= nether.bottom) then
-		players_in_nether[pname] = true
-	else
-		players_in_nether[pname] = nil
-	end
-end
-
 local function save_nether_players()
 	local playernames,n = {},1
 	for name in pairs(players_in_nether) do
@@ -60,6 +39,24 @@ local function save_nether_players()
 	assert(f, "Could not open nether_players file for writing.")
 	f:write(table.concat(playernames, " "))
 	io.close(f)
+end
+
+-- Nether aware mods will need to know if a player is in the nether.
+function nether.is_player_in_nether(player)
+	return players_in_nether[player:get_player_name()]
+end
+
+-- Nether aware mods may have other means of moving players between the Nether
+-- and Overworld, and if so, they should tell us about it so we can keep track
+-- of the player state.
+function nether.external_nether_teleport(player)
+	local pos = player:get_pos()
+	local pname = player:get_player_name()
+	if (pos.y < nether.start) and (pos.y >= nether.bottom) then
+		players_in_nether[pname] = true
+	else
+		players_in_nether[pname] = nil
+	end
 end
 
 local update_background
@@ -100,13 +97,12 @@ end
 
 -- used for obsidian portal
 local function obsidian_teleport(player, pname, target)
-	if nether.trap_players then
-		minetest.chat_send_player(pname, "For any reason you arrived here. Type " ..
-			"/nether_help to find out things like craft recipes.")
-		players_in_nether[pname] = true
-		save_nether_players()
-		update_background(player, true)
-	end
+	minetest.chat_send_player(pname, "For any reason you arrived here. Type " ..
+		"/nether_help to find out things like craft recipes.")
+	players_in_nether[pname] = true
+	save_nether_players()
+	update_background(player, true)
+
 	if target then
 		player:set_pos(target)
 	else
@@ -215,14 +211,14 @@ minetest.register_chatcommand("in_hell", {
 		if not player then
 			return false, "Something went wrong."
 		end
-		
-		status = pname.." is in the "
+
+		local status = pname.." is in the "
 		if nether.is_player_in_nether(player) then
 			status = status.."NETHER!"
 		else
 			status = status.."OVERWORLD!"
 		end
-		
+
 		return true, status
 	end
 })
@@ -242,15 +238,15 @@ minetest.register_chatcommand("update_hells_registry", {
 		if not player then
 			return false, "Something went wrong."
 		end
-		
+
 		nether.external_nether_teleport(player)
-		status = pname.." is in the "
+		local status = pname.." is in the "
 		if nether.is_player_in_nether(player) then
 			status = status.."NETHER!"
 		else
 			status = status.."OVERWORLD!"
 		end
-		
+
 		return true, status
 	end
 })
@@ -389,7 +385,7 @@ local function obsi_teleport_player(player, pos, target)
 	end
 
 	local has_teleported
-	if damage_enabled then
+	if (damage_enabled and nether.trap_players) then
 		obsidian_teleport(player, pname)
 		has_teleported = true
 	elseif not mclike_portal then
