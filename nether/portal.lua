@@ -11,7 +11,7 @@ minetest.after(5, function()
 end)
 
 local save_path = minetest.get_worldpath() .. "/nether_players"
-local players_in_nether = {}
+local players_trapped_in_nether = {}
 
 -- Load the list of players which are trapped in the nether
 -- (or would be trapped if nether.trap_players was true)
@@ -23,7 +23,7 @@ do
 		if contents then
 			local playernames = string.split(contents, " ")
 			for i = 1,#playernames do
-				players_in_nether[playernames[i]] = true
+				players_trapped_in_nether[playernames[i]] = true
 			end
 		end
 	end
@@ -31,7 +31,7 @@ end
 
 local function save_nether_players()
 	local playernames,n = {},1
-	for name in pairs(players_in_nether) do
+	for name in pairs(players_trapped_in_nether) do
 		playernames[n] = name
 		n = n+1
 	end
@@ -43,20 +43,26 @@ end
 
 -- Nether aware mods will need to know if a player is in the nether.
 function nether.is_player_in_nether(player)
-	return players_in_nether[player:get_player_name()]
+	if nether.trap_players then
+		return players_trapped_in_nether[player:get_player_name()]
+	end
+	local pos = player:get_pos()
+	return (pos.y < nether.start) and (pos.y >= nether.bottom)
 end
 
 -- Nether aware mods may have other means of moving players between the Nether
 -- and Overworld, and if so, they should tell us about it so we can keep track
 -- of the player state.
-function nether.external_nether_teleport(player)
-	local pos = player:get_pos()
-	local pname = player:get_player_name()
-	if (pos.y < nether.start) and (pos.y >= nether.bottom) then
-		players_in_nether[pname] = true
-	else
-		players_in_nether[pname] = nil
+function nether.external_nether_teleport(player, pos)
+	if not nether.trap_players then
+		player:set_pos(pos)
+		return
 	end
+	local destination_in_nether = (pos.y < nether.start) and (pos.y >= nether.bottom)
+	update_background(player, destination_in_nether)
+	local pname = player:get_player_name()
+	players_trapped_in_nether[pname] = destination_in_nether or nil
+	player:set_pos(pos)
 end
 
 local update_background
@@ -99,7 +105,7 @@ end
 local function obsidian_teleport(player, pname, target)
 	minetest.chat_send_player(pname, "For any reason you arrived here. Type " ..
 		"/nether_help to find out things like craft recipes.")
-	players_in_nether[pname] = true
+	players_trapped_in_nether[pname] = true
 	save_nether_players()
 	update_background(player, true)
 
@@ -113,7 +119,7 @@ end
 -- teleports players to nether or helps it
 local function player_to_nether(player, pos)
 	local pname = player:get_player_name()
-	players_in_nether[pname] = true
+	players_trapped_in_nether[pname] = true
 	save_nether_players()
 	update_background(player, true)
 	if pos then
@@ -132,8 +138,8 @@ end
 
 local function player_from_nether(player, pos)
 	local pname = player:get_player_name()
-	if players_in_nether[pname] then
-		players_in_nether[pname] = nil
+	if players_trapped_in_nether[pname] then
+		players_trapped_in_nether[pname] = nil
 		save_nether_players()
 	end
 	update_background(player, false)
@@ -257,7 +263,7 @@ if nether.trap_players then
 	-- randomly set player position when he/she dies in nether
 	minetest.register_on_respawnplayer(function(player)
 		local pname = player:get_player_name()
-		if not players_in_nether[pname] then
+		if not players_trapped_in_nether[pname] then
 			return
 		end
 		local target = get_player_died_target(player)
@@ -272,14 +278,14 @@ if nether.trap_players then
 		return true
 	end)
 
-	-- override set_pos etc. to disallow player teleportion by e.g. travelnet
+	-- override set_pos etc, to disallow player teleportion by e.g. travelnet
 	local function can_teleport(player, pos)
 		if not player:is_player() then
 			-- the same metatable is used for entities
 			return true
 		end
 		local pname = player:get_player_name()
-		local in_nether = players_in_nether[pname] == true
+		local in_nether = players_trapped_in_nether[pname] == true
 
 		-- test if the target is valid
 		if pos.y < nether.start then
@@ -374,7 +380,7 @@ local particledef = {
 -- teleports player to neter (obsidian portal)
 local function obsi_teleport_player(player, pos, target)
 	local pname = player:get_player_name()
-	if players_in_nether[pname] then
+	if players_trapped_in_nether[pname] then
 		return
 	end
 
