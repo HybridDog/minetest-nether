@@ -76,7 +76,7 @@ function nether.registry_update(player)
 	if nether.trap_players then
 		players_trapped_in_nether[pname] = in_nether
 		update_background(player, in_nether)
-	else if players_trapped_in_nether[pname]
+	elseif players_trapped_in_nether[pname] then
 		players_trapped_in_nether[pname] = nil
 		update_background(player, false)
 	end
