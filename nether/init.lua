@@ -52,6 +52,9 @@ nether.start = f_h_max+100
 -- Height of the nether (bottom of the nether is nether_middle - NETHER_HEIGHT)
 local NETHER_HEIGHT = 30
 
+-- bottom height of the nether.
+nether.bottom = nether_middle - NETHER_HEIGHT
+
 -- Maximum amount of randomness in the map generation
 local NETHER_RANDOM = 2
 

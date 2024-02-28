@@ -43,11 +43,13 @@ end
 
 -- Nether aware mods will need to know if a player is in the nether.
 function nether.is_player_in_nether(player)
-	if nether.trap_players then
-		return players_trapped_in_nether[player:get_player_name()]
-	end
 	local pos = player:get_pos()
 	return (pos.y < nether.start) and (pos.y >= nether.bottom)
+end
+
+-- For testing nether trap state tracking.
+function nether.is_player_trapped_in_nether(player)
+	return players_trapped_in_nether[player:get_player_name()]
 end
 
 -- Nether aware mods may have other means of moving players between the Nether
@@ -63,6 +65,21 @@ function nether.external_nether_teleport(player, pos)
 	local pname = player:get_player_name()
 	players_trapped_in_nether[pname] = destination_in_nether or nil
 	player:set_pos(pos)
+end
+
+-- Has the player dug their way out of the nether?
+-- Has nether.trap_players been disabled?
+function nether.registry_update(player)
+	local pos = player:get_pos()
+	local in_nether = (pos.y < nether.start) and (pos.y >= nether.bottom)
+	local pname = player:get_player_name()
+	if nether.trap_players then
+		players_trapped_in_nether[pname] = in_nether
+		update_background(player, in_nether)
+	else if players_trapped_in_nether[pname]
+		players_trapped_in_nether[pname] = nil
+		update_background(player, false)
+	end
 end
 
 local update_background
@@ -103,7 +120,7 @@ end
 
 -- used for obsidian portal
 local function obsidian_teleport(player, pname, target)
-	minetest.chat_send_player(pname, "For any reason you arrived here. Type " ..
+	minetest.chat_send_player(pname, "For some reason you arrived here. Type " ..
 		"/nether_help to find out things like craft recipes.")
 	players_trapped_in_nether[pname] = true
 	save_nether_players()
@@ -126,7 +143,7 @@ local function player_to_nether(player, pos)
 		player:set_pos(pos)
 		return
 	end
-	minetest.chat_send_player(pname, "For any reason you arrived here. " ..
+	minetest.chat_send_player(pname, "For some reason you arrived here. " ..
 		"Type /nether_help to find out things like craft recipes.")
 	if nether.trap_players then
 		player:set_hp(0)
@@ -229,6 +246,35 @@ minetest.register_chatcommand("in_hell", {
 	end
 })
 
+-- Useful for debugging Nether player state tracking. Written by Deathwing777
+minetest.register_chatcommand("trapped_in_hell", {
+	params = "[<player_name>]",
+	description = "Is the player trapped in hell?",
+	func = function(name, pname)
+		if not minetest.check_player_privs(name, {nether=true}) then
+			return false,
+				"You need the nether priv to execute this chatcommand."
+		end
+		if not player_exists(pname) then
+			pname = name
+		end
+		local player = minetest.get_player_by_name(pname)
+		if not player then
+			return false, "Something went wrong."
+		end
+
+		local status = pname
+		if nether.is_player_trapped_in_nether(player) then
+			status = status.." is TRAPPED in nether!"
+		else
+			status = status.." is NOT trapped in nether!"
+		end
+
+		return true, status
+	end
+})
+
+-- Useful for debugging Nether player state tracking. Written by Deathwing777
 minetest.register_chatcommand("update_hells_registry", {
 	params = "[<player_name>]",
 	description = "Update player state if they got to or from the nether in another way.",
@@ -245,12 +291,12 @@ minetest.register_chatcommand("update_hells_registry", {
 			return false, "Something went wrong."
 		end
 
-		nether.external_nether_teleport(player)
-		local status = pname.." is in the "
-		if nether.is_player_in_nether(player) then
-			status = status.."NETHER!"
+		nether.registry_update(player)
+		local status = pname
+		if nether.is_player_trapped_in_nether(player) then
+			status = status.." is TRAPPED in nether!"
 		else
-			status = status.."OVERWORLD!"
+			status = status.." is NOT trapped in nether!"
 		end
 
 		return true, status
