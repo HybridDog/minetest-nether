@@ -52,6 +52,19 @@ function nether.is_player_trapped_in_nether(player)
 	return players_trapped_in_nether[player:get_player_name()]
 end
 
+local update_background
+if nether.trap_players then
+	function update_background(player, down)
+		if down then
+			player:set_sky({r=15, g=0, b=0}, "plain")
+		else
+			player:set_sky(nil, "regular")
+		end
+	end
+else
+	function update_background()end
+end
+
 -- Nether aware mods may have other means of moving players between the Nether
 -- and Overworld, and if so, they should tell us about it so we can keep track
 -- of the player state.
@@ -74,25 +87,12 @@ function nether.registry_update(player)
 	local in_nether = (pos.y < nether.start) and (pos.y >= nether.bottom)
 	local pname = player:get_player_name()
 	if nether.trap_players then
-		players_trapped_in_nether[pname] = in_nether
+		players_trapped_in_nether[pname] = in_nether or nil
 		update_background(player, in_nether)
 	elseif players_trapped_in_nether[pname] then
 		players_trapped_in_nether[pname] = nil
 		update_background(player, false)
 	end
-end
-
-local update_background
-if nether.trap_players then
-	function update_background(player, down)
-		if down then
-			player:set_sky({r=15, g=0, b=0}, "plain")
-		else
-			player:set_sky(nil, "regular")
-		end
-	end
-else
-	function update_background()end
 end
 
 -- returns nodename if area is generated, else calls generation function
