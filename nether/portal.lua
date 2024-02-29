@@ -11,7 +11,7 @@ minetest.after(5, function()
 end)
 
 local save_path = minetest.get_worldpath() .. "/nether_players"
-local players_in_nether = {}
+local players_trapped_in_nether = {}
 
 -- Load the list of players which are trapped in the nether
 -- (or would be trapped if nether.trap_players was true)
@@ -23,7 +23,7 @@ do
 		if contents then
 			local playernames = string.split(contents, " ")
 			for i = 1,#playernames do
-				players_in_nether[playernames[i]] = true
+				players_trapped_in_nether[playernames[i]] = true
 			end
 		end
 	end
@@ -31,7 +31,7 @@ end
 
 local function save_nether_players()
 	local playernames,n = {},1
-	for name in pairs(players_in_nether) do
+	for name in pairs(players_trapped_in_nether) do
 		playernames[n] = name
 		n = n+1
 	end
@@ -39,6 +39,17 @@ local function save_nether_players()
 	assert(f, "Could not open nether_players file for writing.")
 	f:write(table.concat(playernames, " "))
 	io.close(f)
+end
+
+-- Nether aware mods will need to know if a player is in the nether.
+function nether.is_player_in_nether(player)
+	local pos = player:get_pos()
+	return (pos.y < nether.start) and (pos.y >= nether.bottom)
+end
+
+-- For testing nether trap state tracking.
+function nether.is_player_trapped_in_nether(player)
+	return players_trapped_in_nether[player:get_player_name()]
 end
 
 local update_background
@@ -52,6 +63,36 @@ if nether.trap_players then
 	end
 else
 	function update_background()end
+end
+
+-- Nether aware mods may have other means of moving players between the Nether
+-- and Overworld, and if so, they should tell us about it so we can keep track
+-- of the player state.
+function nether.external_nether_teleport(player, pos)
+	if not nether.trap_players then
+		player:set_pos(pos)
+		return
+	end
+	local destination_in_nether = (pos.y < nether.start) and (pos.y >= nether.bottom)
+	update_background(player, destination_in_nether)
+	local pname = player:get_player_name()
+	players_trapped_in_nether[pname] = destination_in_nether or nil
+	player:set_pos(pos)
+end
+
+-- Has the player dug their way out of the nether?
+-- Has nether.trap_players been disabled?
+function nether.registry_update(player)
+	local pos = player:get_pos()
+	local in_nether = (pos.y < nether.start) and (pos.y >= nether.bottom)
+	local pname = player:get_player_name()
+	if nether.trap_players then
+		players_trapped_in_nether[pname] = in_nether or nil
+		update_background(player, in_nether)
+	elseif players_trapped_in_nether[pname] then
+		players_trapped_in_nether[pname] = nil
+		update_background(player, false)
+	end
 end
 
 -- returns nodename if area is generated, else calls generation function
@@ -79,11 +120,12 @@ end
 
 -- used for obsidian portal
 local function obsidian_teleport(player, pname, target)
-	minetest.chat_send_player(pname, "For any reason you arrived here. Type " ..
+	minetest.chat_send_player(pname, "For some reason you arrived here. Type " ..
 		"/nether_help to find out things like craft recipes.")
-	players_in_nether[pname] = true
+	players_trapped_in_nether[pname] = true
 	save_nether_players()
 	update_background(player, true)
+
 	if target then
 		player:set_pos(target)
 	else
@@ -94,14 +136,14 @@ end
 -- teleports players to nether or helps it
 local function player_to_nether(player, pos)
 	local pname = player:get_player_name()
-	players_in_nether[pname] = true
+	players_trapped_in_nether[pname] = true
 	save_nether_players()
 	update_background(player, true)
 	if pos then
 		player:set_pos(pos)
 		return
 	end
-	minetest.chat_send_player(pname, "For any reason you arrived here. " ..
+	minetest.chat_send_player(pname, "For some reason you arrived here. " ..
 		"Type /nether_help to find out things like craft recipes.")
 	if nether.trap_players then
 		player:set_hp(0)
@@ -113,8 +155,8 @@ end
 
 local function player_from_nether(player, pos)
 	local pname = player:get_player_name()
-	if players_in_nether[pname] then
-		players_in_nether[pname] = nil
+	if players_trapped_in_nether[pname] then
+		players_trapped_in_nether[pname] = nil
 		save_nether_players()
 	end
 	update_background(player, false)
@@ -176,13 +218,98 @@ minetest.register_chatcommand("from_hell", {
 	end
 })
 
+-- Useful for debugging Nether player state tracking. Written by Deathwing777
+minetest.register_chatcommand("in_hell", {
+	params = "[<player_name>]",
+	description = "Is the player in hell?",
+	func = function(name, pname)
+		if not minetest.check_player_privs(name, {nether=true}) then
+			return false,
+				"You need the nether priv to execute this chatcommand."
+		end
+		if not player_exists(pname) then
+			pname = name
+		end
+		local player = minetest.get_player_by_name(pname)
+		if not player then
+			return false, "Something went wrong."
+		end
+
+		local status = pname.." is in the "
+		if nether.is_player_in_nether(player) then
+			status = status.."NETHER!"
+		else
+			status = status.."OVERWORLD!"
+		end
+
+		return true, status
+	end
+})
+
+-- Useful for debugging Nether player state tracking. Written by Deathwing777
+minetest.register_chatcommand("trapped_in_hell", {
+	params = "[<player_name>]",
+	description = "Is the player trapped in hell?",
+	func = function(name, pname)
+		if not minetest.check_player_privs(name, {nether=true}) then
+			return false,
+				"You need the nether priv to execute this chatcommand."
+		end
+		if not player_exists(pname) then
+			pname = name
+		end
+		local player = minetest.get_player_by_name(pname)
+		if not player then
+			return false, "Something went wrong."
+		end
+
+		local status = pname
+		if nether.is_player_trapped_in_nether(player) then
+			status = status.." is TRAPPED in nether!"
+		else
+			status = status.." is NOT trapped in nether!"
+		end
+
+		return true, status
+	end
+})
+
+-- Useful for debugging Nether player state tracking. Written by Deathwing777
+minetest.register_chatcommand("update_hells_registry", {
+	params = "[<player_name>]",
+	description = "Update player state if they got to or from the nether in another way.",
+	func = function(name, pname)
+		if not minetest.check_player_privs(name, {nether=true}) then
+			return false,
+				"You need the nether priv to execute this chatcommand."
+		end
+		if not player_exists(pname) then
+			pname = name
+		end
+		local player = minetest.get_player_by_name(pname)
+		if not player then
+			return false, "Something went wrong."
+		end
+
+		nether.registry_update(player)
+		local status = pname
+		if nether.is_player_trapped_in_nether(player) then
+			status = status.." is TRAPPED in nether!"
+		else
+			status = status.." is NOT trapped in nether!"
+		end
+
+		return true, status
+	end
+})
+
 
 -- Disallow teleportation and change spawn positions if the nether traps players
 if nether.trap_players then
 	-- randomly set player position when he/she dies in nether
 	minetest.register_on_respawnplayer(function(player)
 		local pname = player:get_player_name()
-		if not players_in_nether[pname] then
+		if not players_trapped_in_nether[pname] then
 			return
 		end
 		local target = get_player_died_target(player)
@@ -197,14 +324,14 @@ if nether.trap_players then
 		return true
 	end)
 
-	-- override set_pos etc. to disallow player teleportion by e.g. travelnet
+	-- override set_pos etc, to disallow player teleportion by e.g. travelnet
 	local function can_teleport(player, pos)
 		if not player:is_player() then
 			-- the same metatable is used for entities
 			return true
 		end
 		local pname = player:get_player_name()
-		local in_nether = players_in_nether[pname] == true
+		local in_nether = players_trapped_in_nether[pname] == true
 
 		-- test if the target is valid
 		if pos.y < nether.start then
@@ -299,7 +426,7 @@ local particledef = {
 -- teleports player to neter (obsidian portal)
 local function obsi_teleport_player(player, pos, target)
 	local pname = player:get_player_name()
-	if players_in_nether[pname] then
+	if players_trapped_in_nether[pname] then
 		return
 	end
 
@@ -310,7 +437,7 @@ local function obsi_teleport_player(player, pos, target)
 	end
 
 	local has_teleported
-	if damage_enabled then
+	if (damage_enabled and nether.trap_players) then
 		obsidian_teleport(player, pname)
 		has_teleported = true
 	elseif not mclike_portal then
