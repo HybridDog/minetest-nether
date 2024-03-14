@@ -263,7 +263,7 @@ minetest.register_chatcommand("nether_help", {
 		if not player then
 			return false, "Something went wrong."
 		end
-		if not nether.overworld_help and player:get_pos().y > nether.start then
+		if not nether.overworld_help and player:get_pos().y > nether.v.nether_start then
 			return false, "Usually you don't neet this guide here. " ..
 				"You can view it in the nether."
 		end
