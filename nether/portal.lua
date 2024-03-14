@@ -1,7 +1,11 @@
 --code copied from Pilzadam's nether mod and edited
 
+local nether_start = nether.v.nether_start
+local nether_bottom = nether.v.nether_bottom
+local nether_buildings = nether.v.nether_buildings
+
 -- kills the player if he uses PilzAdam portal
-local portal_target = nether.buildings+1
+local portal_target = nether_buildings+1
 local damage_enabled = minetest.settings:get_bool"enable_damage"
 local mclike_portal = false
 
@@ -44,7 +48,7 @@ end
 -- Nether aware mods will need to know if a player is in the nether.
 function nether.is_player_in_nether(player)
 	local pos = player:get_pos()
-	return (pos.y < nether.start) and (pos.y >= nether.bottom)
+	return (pos.y < nether_start) and (pos.y >= nether_bottom)
 end
 
 -- For testing nether trap state tracking.
@@ -73,7 +77,7 @@ function nether.external_nether_teleport(player, pos)
 		player:set_pos(pos)
 		return
 	end
-	local destination_in_nether = (pos.y < nether.start) and (pos.y >= nether.bottom)
+	local destination_in_nether = (pos.y < nether_start) and (pos.y >= nether_bottom)
 	update_background(player, destination_in_nether)
 	local pname = player:get_player_name()
 	players_trapped_in_nether[pname] = destination_in_nether or nil
@@ -84,7 +88,7 @@ end
 -- Has nether.trap_players been disabled?
 function nether.registry_update(player)
 	local pos = player:get_pos()
-	local in_nether = (pos.y < nether.start) and (pos.y >= nether.bottom)
+	local in_nether = (pos.y < nether_start) and (pos.y >= nether_bottom)
 	local pname = player:get_player_name()
 	if nether.trap_players then
 		players_trapped_in_nether[pname] = in_nether or nil
@@ -334,7 +338,7 @@ if nether.trap_players then
 		local in_nether = players_trapped_in_nether[pname] == true
 
 		-- test if the target is valid
-		if pos.y < nether.start then
+		if pos.y < nether_start then
 			if in_nether then
 				return true
 			end
@@ -344,7 +348,7 @@ if nether.trap_players then
 
 		-- test if the current position is valid
 		local current_pos = player:get_pos()
-		local now_in_nether = current_pos.y < nether.start
+		local now_in_nether = current_pos.y < nether_start
 		if now_in_nether ~= in_nether then
 			if in_nether then
 				minetest.log("action", "Player \"" .. pname ..
@@ -372,7 +376,7 @@ if nether.trap_players then
 	local metatable_overridden
 	minetest.register_on_joinplayer(function(player)
 		-- set the background when the player joins
-		if player:get_pos().y < nether.start then
+		if player:get_pos().y < nether_start then
 			update_background(player, true)
 		end
 
@@ -559,7 +563,7 @@ local function make_portal(pos)
 		return false
 	end
 
-	local in_nether = p1.y < nether.start
+	local in_nether = p1.y < nether_start
 
 	if in_nether
 	and not mclike_portal then
@@ -788,7 +792,7 @@ function nether.teleport_player(player)
 	end
 	minetest.sound_play("nether_teleporter", {pos=pos})
 	local meta = minetest.get_meta({x=pos.x, y=pos.y-1, z=pos.z})
-	if pos.y < nether.start then
+	if pos.y < nether_start then
 		set_portal(known_portals_d, pos.z,pos.x, pos.y)
 
 		local my = tonumber(meta:get_string("y"))

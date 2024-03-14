@@ -5,7 +5,7 @@ local default_settings = {
 	overworld_help = true,
 }
 
-nether.settings = {}
+nether.settings = {} -- FIXME: unused field. store settings in here?
 
 for name,dv in pairs(default_settings) do
 	local setting
