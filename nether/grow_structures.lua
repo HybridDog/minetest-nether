@@ -1,17 +1,24 @@
 
-local function r_area(manip, width, height, pos)
+local netherstructure_height = 6
+
+local function vmanip_with_r_area(width, height, pos)
+	local manip = minetest.get_voxel_manip()
 	local emerged_pos1, emerged_pos2 = manip:read_from_map(
 		{x=pos.x-width, y=pos.y, z=pos.z-width},
 		{x=pos.x+width, y=pos.y+height, z=pos.z+width}
 	)
-	return VoxelArea:new({MinEdge=emerged_pos1, MaxEdge=emerged_pos2})
+	return manip, VoxelArea:new({MinEdge=emerged_pos1, MaxEdge=emerged_pos2})
+end
+
+local function inform_grow(pos, t1, name, generated)
+	nether:inform(name.." grew at " .. minetest.pos_to_string(pos),
+		generated and 3 or 2, t1)
 end
 
 local function set_vm_data(manip, nodes, pos, t1, name, generated)
 	manip:set_data(nodes)
 	manip:write_to_map(not generated)
-	nether:inform(name.." grew at " .. minetest.pos_to_string(pos),
-		generated and 3 or 2, t1)
+	inform_grow(pos, t1, name, generated)
 end
 
 local c, contents_defined
@@ -22,20 +29,10 @@ local function define_contents()
 	end
 end
 
-function nether.grow_netherstructure(pos, generated)
-	local t1 = minetest.get_us_time()
-
+local function grow_netherstructure_into_raw(area, nodes, pos, generated)
 	define_contents()
 
-	if not pos.x then print(dump(pos))
-		nether:inform("Error: "..dump(pos), 1)
-		return
-	end
-
-	local height = 6
-	local manip = minetest.get_voxel_manip()
-	local area = r_area(manip, 2, height, pos)
-	local nodes = manip:get_data()
+	local height = netherstructure_height
 
 	local vi = area:indexp(pos)
 	for _ = 0, height-1 do
@@ -75,9 +72,37 @@ function nether.grow_netherstructure(pos, generated)
 			end
 		end
 	end
-	set_vm_data(manip, nodes, pos, t1, "blood", generated)
 end
 
+function nether.grow_netherstructure_into(area, nodes, pos, generated)
+	local t1 = minetest.get_us_time()
+
+	if not pos.x then print(dump(pos))
+		nether:inform("Error: "..dump(pos), 1)
+		return
+	end
+
+	grow_netherstructure_into_raw(area, nodes, pos, generated)
+
+	inform_grow(pos, t1, "blood", generated)
+end
+
+function nether.grow_netherstructure(pos, generated)
+	local t1 = minetest.get_us_time()
+
+	if not pos.x then print(dump(pos))
+		nether:inform("Error: "..dump(pos), 1)
+		return
+	end
+
+	local height = netherstructure_height
+	local manip, area = vmanip_with_r_area(2, height, pos)
+	local nodes = manip:get_data()
+
+	grow_netherstructure_into_raw(area, nodes, pos, generated)
+
+	set_vm_data(manip, nodes, pos, t1, "blood", generated)
+end
 
 local poshash = minetest.hash_node_position
 local pos_from_hash = minetest.get_position_from_hash

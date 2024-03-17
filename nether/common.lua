@@ -1,6 +1,8 @@
 
 dofile(nether.path .. "/settings.lua")
 
+local in_mapgen_env = nether.env_type == "ssm_mapgen"
+
 -- vars
 nether.v = {}
 local v = nether.v
@@ -132,14 +134,16 @@ function nether.query_contents()
 end
 
 if nether.log_level >= 1 then
+	local mod_prefix = in_mapgen_env and "[nether(mg)] " or "[nether] "
+
 	function nether:inform(msg, spam, t)
 		if spam <= self.log_level then
 			local info
 			if t then
-				info = "[nether] " .. msg .. (" after ca. %.3g s"):format(
+				info = mod_prefix .. msg .. (" after ca. %.3g s"):format(
 					(minetest.get_us_time() - t) / 1000000)
 			else
-				info = "[nether] " .. msg
+				info = mod_prefix .. msg
 			end
 			print(info)
 			if self.log_to_chat then
