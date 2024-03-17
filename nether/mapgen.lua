@@ -1,5 +1,6 @@
 
 local path = nether.path
+local in_mapgen_env = nether.env_type == "ssm_mapgen"
 
 -- vars
 local v = nether.v
@@ -189,7 +190,7 @@ local data = {}
 local structures_enabled = true
 local vine_maxlength = math.floor(NETHER_HEIGHT/4+0.5)
 -- Create the Nether
-minetest.register_on_generated(function(minp, maxp, seed)
+local function on_generated(minp, maxp, seed)
 	--avoid big map generation
 	if not (maxp.y >= NETHER_BOTTOM-100 and minp.y <= nether_start) then
 		return
@@ -442,39 +443,77 @@ minetest.register_on_generated(function(minp, maxp, seed)
 			end
 		end
 	end
+
+	nether:inform("most stuff set", 2, t1)
+
+	local t2 = minetest.get_us_time()
+	local bl_cnt = 0
+	local tr_cnt = 0
+	local tr_snd_cnt = 0
+
+	if structures_enabled then -- Blood netherstructures
+		bl_cnt = #tab
+		for i = 1, #tab do
+			nether.grow_netherstructure_into(area, data, tab[i], true)
+		end
+	end
+
+	if bl_cnt > 0 then
+		nether:inform(bl_cnt .. " blood structures set", 2, t2)
+	end
+
+	t2 = minetest.get_us_time()
 	vm:set_data(data)
 --	vm:set_lighting(12)
 --	vm:calc_lighting()
 --	vm:update_liquids()
-	vm:write_to_map(false)
-
-	nether:inform("nodes set", 2, t1)
-
-	local t2 = minetest.get_us_time()
-	local tr_bl_cnt = 0
-
-	if structures_enabled then -- Blood netherstructures
-		tr_bl_cnt = #tab
-		for i = 1,tr_bl_cnt do
-			nether.grow_netherstructure(tab[i], true)
-		end
+	if not in_mapgen_env then
+		vm:write_to_map(false)
 	end
-
-	if forest_possible then -- Forest trees
-		tr_bl_cnt = tr_bl_cnt + #trees
-		for i = 1,#trees do
-			nether.grow_tree(trees[i], true)
-		end
-	end
-
-	if tr_bl_cnt > 0 then
-		nether:inform(tr_bl_cnt .. " trees and blood structures set", 2, t2)
-	end
+	nether:inform("data written", 2, t2)
 
 	t2 = minetest.get_us_time()
-	minetest.fix_light(minp, maxp)
+	if forest_possible then -- Forest trees
+		if in_mapgen_env then
+			-- Trees can get too big (>16 nodes in one direction) for usual
+			-- overgeneration onion layer. nether.grow_tree will make new vmanips
+			-- to emerge blank (= ignore-filled) blocks to overcome this. But the
+			-- main server thread needs to do this.
+			tr_snd_cnt = #trees
+			local trees_hashed = {}
+			for i = 1, #trees do
+				trees_hashed[i] = minetest.hash_node_position(trees[i])
+			end
+			assert(minetest.save_gen_notify("nether:please_grow_trees", trees_hashed))
+		else
+			tr_cnt = #trees
+			for i = 1, #trees do
+				nether.grow_tree(trees[i], true)
+			end
+		end
+	end
 
-	nether:inform("light fixed", 2, t2)
+	if tr_cnt + tr_snd_cnt > 0 then
+		nether:inform(string.format("%s trees set, %s trees sent",
+				tr_cnt, tr_snd_cnt), 2, t2)
+	end
+
+	if in_mapgen_env then
+		assert(minetest.save_gen_notify("nether:please_fix_light", {minp, maxp}))
+	else
+		t2 = minetest.get_us_time()
+		minetest.fix_light(minp, maxp)
+
+		nether:inform("light fixed", 2, t2)
+	end
 
 	nether:inform("done", 1, t1)
-end)
+end
+
+if in_mapgen_env then
+	minetest.register_on_generated(function(_, minp, maxp, blockseed)
+		return on_generated(minp, maxp, blockseed)
+	end)
+else
+	minetest.register_on_generated(on_generated)
+end

@@ -17,7 +17,10 @@ if not rawget(_G, "nether") then
 	nether = {}
 end
 
-nether.path = minetest.get_modpath"nether"
+-- similar to INIT
+nether.env_type = "ssm" -- server-side-modding
+
+nether.path = minetest.get_modpath("nether")
 local path = nether.path
 
 dofile(path .. "/common.lua")
@@ -28,9 +31,43 @@ dofile(path .. "/pearl.lua")
 
 dofile(path .. "/grow_structures.lua")
 
-dofile(path .. "/mapgen.lua")
+if minetest.register_mapgen_script then
+	minetest.log("info", "nether mapgen running in mapgen env")
 
+	minetest.register_mapgen_script(path .. "/init_emerge.lua")
 
+	minetest.set_gen_notify("custom", nil,
+			{"nether:please_grow_trees", "nether:please_fix_light"})
+
+	minetest.register_on_generated(function(minp, maxp, blockseed)
+		local t0 = minetest.get_us_time()
+
+		local gennotify = minetest.get_mapgen_object("gennotify")
+
+		-- forest trees
+		local trees_hashed = gennotify.custom["nether:please_grow_trees"] or {}
+		for i = 1, #trees_hashed do
+			local pos = minetest.get_position_from_hash(trees_hashed[i])
+			nether.grow_tree(pos, true)
+		end
+
+		if #trees_hashed > 0 then
+			nether:inform(#trees_hashed .. " trees set", 2, t0)
+		end
+
+		-- fix light
+		local fixlight_area = gennotify.custom["nether:please_fix_light"]
+		if fixlight_area then
+			t0 = minetest.get_us_time()
+			minetest.fix_light(fixlight_area[1], fixlight_area[2])
+			nether:inform("light fixed", 2, t0)
+		end
+	end)
+
+else
+	minetest.log("info", "nether mapgen running in main env")
+	dofile(path .. "/mapgen.lua")
+end
 
 --abms
 
